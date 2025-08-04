@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { fetchRecipeById } from '../services/recipeAPI';
 import { Recipe } from '../types/types';
+import { useAuth } from '../context/AuthContext';
+import { HeartIcon } from '@heroicons/react/24/solid';
 
 const RecipeDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     const loadRecipe = async () => {
@@ -20,7 +23,6 @@ const RecipeDetail: React.FC = () => {
   }, [id]);
 
   if (loading) return <div className="text-center mt-10">Loading...</div>;
-
   if (!recipe) return <div className="text-center mt-10">Recipe not found</div>;
 
   const ingredients: string[] = [];
@@ -35,6 +37,31 @@ const RecipeDetail: React.FC = () => {
     }
   }
 
+  const handleLike = () => {
+    if (!user) {
+      alert('Please login first');
+      return;
+    }
+
+    if (!user.likedRecipes.includes(recipe.idMeal)) {
+      const updatedUser = {
+        ...user,
+        likedRecipes: [...user.likedRecipes, recipe.idMeal],
+      };
+
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const updatedUsers = users.map((u: any) =>
+        u.email === user.email ? updatedUser : u
+      );
+
+      localStorage.setItem('users', JSON.stringify(updatedUsers));
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      window.location.reload();
+    }
+  };
+
+  const isLiked = user?.likedRecipes.includes(recipe.idMeal);
+
   return (
     <div className="max-w-2xl mx-auto p-4">
       <Link to="/" className="text-black mb-4 inline-block">← Back to Home</Link>
@@ -47,7 +74,16 @@ const RecipeDetail: React.FC = () => {
         />
 
         <div className="p-4">
-          <h1 className="text-2xl font-bold mb-2">{recipe.strMeal}</h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-2xl font-bold">{recipe.strMeal}</h1>
+            <button onClick={handleLike}>
+              <HeartIcon
+                className={`h-6 w-6 cursor-pointer transition ${
+                  isLiked ? 'text-red-500' : 'text-gray-400'
+                }`}
+              />
+            </button>
+          </div>
 
           <div className="flex flex-wrap gap-2 mb-4">
             {recipe.strCategory && (
