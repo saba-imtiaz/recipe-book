@@ -59,7 +59,7 @@ const Home: React.FC = () => {
 
   return (
     <div className="bg-white min-h-screen px-4 sm:px-8">
-      {/* Header */}
+   
       <div className="text-center mt-0 mb-4">
         <h1 className="text-4xl sm:text-5xl font-bold">
           <span className="text-gray-900">Discover Amazing </span>
@@ -72,21 +72,20 @@ const Home: React.FC = () => {
         </p>
       </div>
 
-      {/* Search Bar */}
       <div className="flex justify-center mb-4">
         <SearchBar onSearch={setSearchQuery} />
       </div>
 
-      {/* Sidebar + Recipe Cards */}
+   
       <div className="flex flex-col md:flex-row gap-6">
-        {/* Sidebar */}
+    
         <Sidebar
           categories={categories}
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
         />
 
-        {/* Recipe Cards */}
+     
         <div className="flex-1">
           {currentRecipes.length === 0 ? (
             <p className="text-center text-gray-500">

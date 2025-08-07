@@ -15,10 +15,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mb-6 flex justify-center items-center gap-1" // reduced gap
+      className="mb-6 flex justify-center items-center gap-1" 
     >
       <div className="relative">
-        {/* Search Icon inside input */}
+  
         <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -36,7 +36,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           </svg>
         </span>
 
-        {/* Input field with padding to accommodate icon */}
+ 
         <input
           type="text"
           value={searchQuery}
@@ -46,7 +46,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         />
       </div>
 
-      {/* Search button - styled like 'Add Recipe' button */}
    <button
   type="submit"
   className="bg-gradient-to-r from-orange-400 to-yellow-400 text-white px-6 py-3 rounded-md text-l font-semibold shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-0 border-none"

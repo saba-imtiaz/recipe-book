@@ -11,11 +11,36 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
 
+  // Load logged-in user from localStorage on mount
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      const users = JSON.parse(localStorage.getItem('users') || '[]') as User[];
+      const fullUser = users.find(u => u.email === parsedUser.email);
+      if (fullUser) {
+        setUser(fullUser);
+      }
     }
+  }, []);
+
+  // Update stored user when 'userUpdate' is triggered
+  useEffect(() => {
+    const handleUserUpdate = (e: CustomEvent<User>) => {
+      const updatedUser = e.detail;
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+
+      // Also update this user in the full users list
+      const users = JSON.parse(localStorage.getItem('users') || '[]') as User[];
+      const updatedUsers = users.map(u =>
+        u.email === updatedUser.email ? updatedUser : u
+      );
+      localStorage.setItem('users', JSON.stringify(updatedUsers));
+    };
+
+    window.addEventListener('userUpdate', handleUserUpdate as EventListener);
+    return () => window.removeEventListener('userUpdate', handleUserUpdate as EventListener);
   }, []);
 
   const login = (email: string, password: string): boolean => {
@@ -31,13 +56,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = (newUser: Omit<User, 'likedRecipes' | 'customRecipes'>) => {
     const users = JSON.parse(localStorage.getItem('users') || '[]') as User[];
+    const alreadyExists = users.some(u => u.email === newUser.email);
+    if (alreadyExists) {
+      alert('User with this email already exists');
+      return;
+    }
+
     const userWithDefaults: User = {
       ...newUser,
       likedRecipes: [],
       customRecipes: []
     };
-    users.push(userWithDefaults);
-    localStorage.setItem('users', JSON.stringify(users));
+    const updatedUsers = [...users, userWithDefaults];
+    localStorage.setItem('users', JSON.stringify(updatedUsers));
+    setUser(userWithDefaults);
+    localStorage.setItem('user', JSON.stringify(userWithDefaults));
   };
 
   const logout = () => {

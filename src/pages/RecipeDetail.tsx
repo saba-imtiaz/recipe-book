@@ -1,39 +1,58 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { fetchRecipeById } from '../services/recipeAPI';
-import { Recipe } from '../types/types';
+import { Recipe, CustomRecipe } from '../types/types';
 import { useAuth } from '../context/AuthContext';
 import { HeartIcon } from '@heroicons/react/24/solid';
 
+type AnyRecipe = (Recipe | CustomRecipe) & { isCustom?: boolean };
+
 const RecipeDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [recipe, setRecipe] = useState<AnyRecipe | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
   useEffect(() => {
     const loadRecipe = async () => {
-      if (id) {
-        const loadedRecipe = await fetchRecipeById(id);
-        setRecipe(loadedRecipe);
+      if (!id) return;
+
+      // Check if recipe exists in customRecipes
+      const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+      const custom = storedUser?.customRecipes?.find((r: CustomRecipe) => r.idMeal === id);
+
+      if (custom) {
+        setRecipe({ ...custom, isCustom: true }); // ✅ Mark custom recipe
         setLoading(false);
+        return;
       }
+const loadedRecipe = await fetchRecipeById(id);
+setRecipe({ ...(loadedRecipe as Recipe), isCustom: false }); // ✅ type-asserted
+
+      setLoading(false);
     };
+
     loadRecipe();
   }, [id]);
 
   if (loading) return <div className="text-center mt-10">Loading...</div>;
   if (!recipe) return <div className="text-center mt-10">Recipe not found</div>;
 
-  const ingredients: string[] = [];
-  const recipeData = recipe as Record<string, any>;
+  // Extract ingredients
+  let ingredients: string[] = [];
 
-  for (let i = 1; i <= 20; i++) {
-    const ingredient = recipeData[`strIngredient${i}`];
-    const measure = recipeData[`strMeasure${i}`];
-
-    if (ingredient && ingredient.trim() !== '') {
-      ingredients.push(`${ingredient}${measure ? ` - ${measure}` : ''}`);
+  if ('ingredients' in recipe && Array.isArray(recipe.ingredients)) {
+    ingredients = recipe.ingredients.filter(
+      (item) => typeof item === 'string' && item.trim() !== ''
+    );
+  } else {
+    const recipeData = recipe as Record<string, any>;
+    for (let i = 1; i <= 20; i++) {
+      const ingredient = recipeData[`strIngredient${i}`];
+      const measure = recipeData[`strMeasure${i}`];
+      if (ingredient && ingredient.trim() !== '') {
+        ingredients.push(`${ingredient}${measure ? ` - ${measure}` : ''}`);
+      }
     }
   }
 
@@ -43,21 +62,26 @@ const RecipeDetail: React.FC = () => {
       return;
     }
 
-    if (!user.likedRecipes.includes(recipe.idMeal)) {
-      const updatedUser = {
-        ...user,
-        likedRecipes: [...user.likedRecipes, recipe.idMeal],
-      };
+    const isAlreadyLiked = user.likedRecipes.includes(recipe.idMeal);
+    let updatedLikedRecipes = isAlreadyLiked
+      ? user.likedRecipes.filter((id) => id !== recipe.idMeal)
+      : [...user.likedRecipes, recipe.idMeal];
 
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const updatedUsers = users.map((u: any) =>
-        u.email === user.email ? updatedUser : u
-      );
+    const updatedUser = {
+      ...user,
+      likedRecipes: updatedLikedRecipes,
+    };
 
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      window.location.reload();
-    }
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const updatedUsers = users.map((u: any) =>
+      u.email === user.email ? updatedUser : u
+    );
+
+    localStorage.setItem('users', JSON.stringify(updatedUsers));
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+
+    const event = new CustomEvent('userUpdate', { detail: updatedUser });
+    window.dispatchEvent(event);
   };
 
   const isLiked = user?.likedRecipes.includes(recipe.idMeal);
@@ -68,29 +92,37 @@ const RecipeDetail: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <img
-          src={recipe.strMealThumb}
-          alt={recipe.strMeal}
+          src={(recipe as any).strMealThumb || 'https://via.placeholder.com/400x300?text=No+Image'}
+          alt={(recipe as any).strMeal || 'Custom Recipe'}
           className="w-full h-64 object-cover"
         />
 
         <div className="p-4">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-2xl font-bold">{recipe.strMeal}</h1>
-            <button onClick={handleLike}>
-              <HeartIcon
-                className={`h-6 w-6 cursor-pointer transition ${
-                  isLiked ? 'text-red-500' : 'text-gray-400'
-                }`}
-              />
-            </button>
+            <h1 className="text-2xl font-bold">{(recipe as any).strMeal || 'Custom Recipe'}</h1>
+
+            {/* ✅ Hide like button if custom recipe */}
+            {recipe.isCustom === false && (
+              <button onClick={handleLike}>
+                <HeartIcon
+                  className={`h-6 w-6 cursor-pointer transition ${
+                    isLiked ? 'text-red-500' : 'text-gray-400'
+                  }`}
+                />
+              </button>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2 mb-4">
-            {recipe.strCategory && (
-              <span className="bg-gray-200 px-2 py-1 rounded text-sm">{recipe.strCategory}</span>
+            {(recipe as any).strCategory && (
+              <span className="bg-gray-200 px-2 py-1 rounded text-sm">
+                {(recipe as any).strCategory}
+              </span>
             )}
-            {recipe.strArea && (
-              <span className="bg-gray-200 px-2 py-1 rounded text-sm">{recipe.strArea}</span>
+            {(recipe as any).strArea && (
+              <span className="bg-gray-200 px-2 py-1 rounded text-sm">
+                {(recipe as any).strArea}
+              </span>
             )}
           </div>
 
@@ -111,7 +143,7 @@ const RecipeDetail: React.FC = () => {
           <div>
             <h2 className="text-lg font-semibold mb-2">Instructions</h2>
             <div className="whitespace-pre-line text-gray-700 text-sm">
-              {recipe.strInstructions}
+              {(recipe as any).strInstructions}
             </div>
           </div>
         </div>

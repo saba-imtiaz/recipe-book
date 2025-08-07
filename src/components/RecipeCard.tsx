@@ -29,10 +29,11 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
           </span>
         </div>
 
-        {/* Fixed height instruction section */}
+        
         <div className="min-h-[120px]">
           <p className="text-sm text-gray-500 mb-4">
-            {recipe.strInstructions.slice(0, 100)}...
+            {recipe.strInstructions ? recipe.strInstructions.slice(0, 100) + '...' : 'RECIPE REMOVED.'}
+      
           </p>
         </div>
 

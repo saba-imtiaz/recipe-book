@@ -3,72 +3,79 @@ import { useAuth } from '../context/AuthContext';
 import { fetchRecipeById } from '../services/recipeAPI';
 import { Recipe } from '../types/types';
 import RecipeCard from '../components/RecipeCard';
-import { Link, useNavigate } from 'react-router-dom';
-import { HeartIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { Link } from 'react-router-dom';
+import { HeartIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 const Dashboard: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [likedRecipes, setLikedRecipes] = useState<Recipe[]>([]);
-  const navigate = useNavigate();
+  const [customRecipes, setCustomRecipes] = useState<Recipe[]>([]);
 
   useEffect(() => {
     const loadLikedRecipes = async () => {
-      if (user && user.likedRecipes.length > 0) {
+      if (user?.likedRecipes?.length) {
         const recipes = await Promise.all(
           user.likedRecipes.map(id => fetchRecipeById(id))
         );
-        setLikedRecipes(recipes.filter(recipe => recipe !== null) as Recipe[]);
+        setLikedRecipes(recipes.filter(Boolean) as Recipe[]);
       }
     };
-    loadLikedRecipes();
-  }, [user]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+    const loadCustomRecipes = () => {
+      if (user?.customRecipes?.length) {
+        const normalized = user.customRecipes.map(r => ({
+          ...r,
+          strMealThumb: r.strMealThumb || 'https://via.placeholder.com/400x300',
+          strCategory: r.strCategory || 'Unknown',
+          strArea: r.strArea || 'Unknown',
+          strInstructions: r.strInstructions || 'No instructions provided.',
+        }));
+        setCustomRecipes(normalized);
+      }
+    };
+
+    loadLikedRecipes();
+    loadCustomRecipes();
+  }, [user]);
 
   if (!user) {
     return (
       <div className="text-center mt-10">
-        <p className="text-xl">Please login to view your dashboard</p>
-        <Link to="/login" className="text-blue-600 underline mt-2 inline-block">
+        <p className="text-xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
+          Please login to view your dashboard
+        </p>
+        <Link to="/login" className="text-black underline mt-2 inline-block">
           Go to Login
         </Link>
       </div>
     );
   }
 
+  const handleDelete = (id: string) => {
+    const updatedCustoms = customRecipes.filter(r => r.idMeal !== id);
+    setCustomRecipes(updatedCustoms);
+
+    const updatedUser = { ...user, customRecipes: updatedCustoms };
+    window.dispatchEvent(new CustomEvent('userUpdate', { detail: updatedUser }));
+  };
+
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Welcome, {user.name}</h1>
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-        >
-          Logout
-        </button>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
+          Welcome, {user.name}
+        </h1>
       </div>
 
       <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold">Your Liked Recipes</h2>
-          <Link
-            to="/add-recipe"
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Add New Recipe
-          </Link>
-        </div>
-
+        <h2 className="text-2xl font-semibold mb-4">Your Liked Recipes</h2>
         {likedRecipes.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {likedRecipes.map(recipe => (
-              <div key={recipe.idMeal} className="relative">
+              <div key={recipe.idMeal} className="relative w-full max-w-xs mx-auto">
                 <RecipeCard recipe={recipe} />
                 <div className="absolute top-2 right-2 flex gap-2">
-                  <HeartIcon className="w-6 h-6 text-red-500" title="Liked" />
+                  <HeartIcon className="w-5 h-5 text-red-500" title="Liked" />
                 </div>
               </div>
             ))}
@@ -80,13 +87,17 @@ const Dashboard: React.FC = () => {
 
       <div>
         <h2 className="text-2xl font-semibold mb-4">Your Custom Recipes</h2>
-        {user.customRecipes.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {user.customRecipes.map(recipe => (
-              <div key={recipe.idMeal} className="relative">
+        {customRecipes.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {customRecipes.map(recipe => (
+              <div key={recipe.idMeal} className="relative w-full max-w-xs mx-auto">
                 <RecipeCard recipe={recipe} />
                 <div className="absolute top-2 right-2 flex gap-2">
-                  <XCircleIcon className="w-6 h-6 text-gray-400" title="Your Recipe" />
+                  <TrashIcon
+                    className="w-5 h-5 text-gray-500 cursor-pointer hover:text-red-600"
+                    title="Delete Recipe"
+                    onClick={() => handleDelete(recipe.idMeal)}
+                  />
                 </div>
               </div>
             ))}
