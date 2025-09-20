@@ -1,12 +1,61 @@
-# React + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# 🍲 Recipe Book App
 
-Currently, two official plugins are available:
+A **beautiful and interactive Recipe Book** built with **React**, **TypeScript**, and **Tailwind CSS**.  
+Fetches recipes from the **MealDB API** and allows users to **browse, search, and save favorites locally**.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 📖 Description
 
-## Expanding the ESLint configuration
+This project is a **frontend-focused recipe application**.  
+Users can explore thousands of meal recipes fetched from the **MealDB API**, view details, and save their favorites using **LocalStorage**.  
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Key highlights:  
+- Fully responsive UI with **Tailwind CSS**  
+- Type-safe components using **TypeScript**  
+- Persistent favorites stored in **LocalStorage**  
+- Search recipes by name or category  
+- Clean and modern UI design  
+
+## ⚡ Features
+
+- Browse recipes by category or search term  
+- View detailed recipe instructions and ingredients  
+- Save favorite recipes locally in the browser    
+- Tailwind-powered modern UI design  
+
+## 🚀 Installation & Running Locally
+
+1. **Clone the repository**:
+
+
+git clone https://github.com/saba-imtiaz/recipe-book-app.git
+cd recipe-book-app
+
+2. **Install dependencies**:
+   
+  npm install
+
+4. **Run the app**:
+
+npm start
+
+## 🛠 Tech Stack
+
+* **React.js** – Frontend library
+* **TypeScript** – Type safety
+* **Tailwind CSS** – Utility-first styling
+* **MealDB API** – Recipe data
+* **LocalStorage** – Persist user favorites
+
+## 👨‍💻 Author
+
+**Saba Imtiaz** – [GitHub Profile](https://github.com/saba-imtiaz)
+
+
+
+---
+
+If you want, I can also **write a shorter “GitHub repo description + topics”** for this project so it looks professional and discoverable on GitHub.  
+
+Do you want me to do that next?
+```
