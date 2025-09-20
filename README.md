@@ -28,7 +28,7 @@ Key highlights:
 1. **Clone the repository**:
 
 
-git clone https://github.com/saba-imtiaz/recipe-book-app.git
+git clone https://github.com/saba-imtiaz/recipe-book.git
 cd recipe-book-app
 
 2. **Install dependencies**:
